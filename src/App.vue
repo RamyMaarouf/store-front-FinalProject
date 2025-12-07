@@ -2,7 +2,7 @@
   <header>
     <div class="header-content">
       <div class="logo-title">
-        <img src="./bestbuy-logo.png" alt="Best Buy Logo" class="logo">
+        <img src="/bestbuy-logo.png" alt="Best Buy Logo" class="logo">
         <h1 class="title">Best Buy Cloud-Native Customer App</h1>
       </div>
       <nav>
@@ -24,9 +24,6 @@
 </template>
 
 <script>
-// NOTE: I am assuming your products, cartCount, addToCart, and cartItems logic 
-// remains the same and is properly initialized in the <script> section.
-
 export default {
   data() {
     return {
@@ -41,8 +38,10 @@ export default {
     fetchProducts() {
         // Your existing product fetching logic
     },
-    addToCart(product) {
+    // 💥 FIX: Renamed 'product' to '_product' to resolve the ESlint 'no-unused-vars' build error.
+    addToCart(_product) {
         // Your existing add to cart logic
+        // If you actually use the 'product' variable here, revert the name and use it.
     }
   },
   created() {
@@ -110,59 +109,4 @@ header {
 }
 
 nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-}
-
-nav li {
-  margin-left: 20px;
-}
-
-nav a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-nav a:hover {
-  color: #FFC600; /* Best Buy Yellow on hover */
-}
-
-/* 4. FOOTER: BEST BUY BLUE */
-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #004694; /* Best Buy Blue */
-  color: #fff;
-  padding: 0.5rem; /* Reduced padding for footer */
-  margin: 0;
-  z-index: 999;
-}
-
-/* 5. BUTTONS: BEST BUY YELLOW */
-button {
-  padding: 10px;
-  background-color: #FFC600; /* Best Buy Yellow */
-  color: #000; 
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  height: 42px;
-  font-weight: bold;
-  transition: background-color 0.2s;
-}
-
-.product-controls button:hover, .checkout-button:hover {
-  background-color: #002D59; /* A darker Best Buy Blue/Navy for hover contrast */
-  color: white;
-}
-
-/* You can keep or adjust your existing product-card styles here */
-.product-card {
-  /* ... */
-}
-</style>
+  list-style:
