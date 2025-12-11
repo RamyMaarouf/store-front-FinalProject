@@ -53,6 +53,22 @@ services:
       retries: 5
     networks:
       - backend_services
+  
+  # ----------------------------------------------------
+  # NEW: STORE-FRONT SERVICE DEFINITION (YOUR APPLICATION)
+  # ----------------------------------------------------
+  store-front:
+    image: maar0006/store-front-finalproject1:latest
+    container_name: 'store-front'
+    restart: always
+    ports:
+      - "8080:80" # Map host port 8080 to container's Nginx port 80
+    networks:
+      - backend_services
+    depends_on:
+      product-service:
+        condition: service_healthy # Ensure the product API is up before the front-end starts trying to fetch data
+      
 networks:
   backend_services:
     driver: bridge

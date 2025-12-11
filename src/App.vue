@@ -1,204 +1,282 @@
 <template>
-  <div id="app">
-    <header>
-      <div class="header-content">
-        <div class="logo-title">
-          <img src="@/assets/bby-logo.png" alt="Best Buy Logo" class="logo" />
-          <h1 class="title">Best Buy Cloud-Native Store</h1>
-        </div>
-
-        <nav>
-          <ul>
-            <li><a href="#">Products</a></li>
-            <li><a href="#">Cart ({{ cartCount }})</a></li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-
-    <!-- Product Grid -->
-    <div class="product-grid">
-      <div class="product-card" v-for="p in products" :key="p.id">
-        <img :src="p.image" class="product-image" alt="Product Image" />
-        <h3>{{ p.name }}</h3>
-        <p class="price">$ {{ p.price }}</p>
-
-        <button @click="addToCart(p)">Add to Cart</button>
-      </div>
-    </div>
-
-    <footer>
-      <p>&copy; 2025 Best Buy Cloud-Native App. All rights reserved.</p>
-    </footer>
-  </div>
+  <TopNav :cartItemCount="cartItemCount"/>
+  <router-view
+    :products="products"
+    :cartItems="cartItems"
+    @addToCart="addToCart"
+    @removeFromCart="removeFromCart"
+    @submitOrder="submitOrder"
+  ></router-view>
 </template>
 
 <script>
+import TopNav from './components/TopNav.vue'
+
 export default {
+  name: 'App',
+  components: {
+    TopNav
+  },
   data() {
     return {
-      products: [],
       cartItems: [],
-      cartCount: 0
-    };
-  },
-
-  methods: {
-    // -----------------------------------------
-    // Fetch products from Product-Service (BestBuy version)
-    // -----------------------------------------
-    async fetchProducts() {
-      try {
-        const res = await fetch("http://product-service.default.svc.cluster.local/products");
-        const data = await res.json();
-
-        // Expecting your Product-Service to return:
-        // [{ id, name, price, image }]
-        this.products = data;
-      } catch (err) {
-        console.error("❌ Failed to fetch products:", err);
-      }
-    },
-
-    // -----------------------------------------
-    // Add product to cart
-    // -----------------------------------------
-    addToCart(product) {
-      this.cartItems.push(product);
-      this.cartCount = this.cartItems.length;
+      products: [],
     }
   },
+  computed: {
+    cartItemCount() {
+      return this.cartItems.reduce((total, item) => {
+        return total + item.quantity
+      }, 0)
+    }
+  },
+  mounted() {
+    this.getProducts()
+  },
+  methods: {
+    getProducts() {
+      fetch('/products')
+        .then(response => response.json())
+        .then(products => {
+          console.log('success getting proxy products')
+          this.products = products
+        })
+        .catch(error => {
+          console.log(error)
+          alert('Error occurred while fetching products')
+        })
+    },
+    addToCart({ productId, quantity }) {
+      // check if the product is already in the cart
+      const existingCartItem = this.cartItems.find(
+        item => item.product.id == productId
+      )
+      if (existingCartItem) {
+        // if it is, increment the quantity
+        existingCartItem.quantity += quantity
+      } else {
+        // if not, find the product, and add it with quantity to the cart
+        const product = this.products.find(product => product.id == productId)
+        this.cartItems.push({ product, quantity })
+      }
+    },
+    removeFromCart(index) {
+      this.cartItems.splice(index, 1)
+    },
+    submitOrder() {
+      // get the order-service URL from an environment variable
+      // const orderServiceUrl = process.env.VUE_APP_ORDER_SERVICE_URL;
 
-  created() {
-    this.fetchProducts();
-  }
-};
+      // create an order object
+      const order = {
+        customerId: Math.floor(Math.random() * 10000000000).toString(),
+        items: this.cartItems.map(item => {
+          return {
+            productId: item.product.id,
+            quantity: item.quantity,
+            price: item.product.price
+          }
+        })
+      }
+
+      console.log(JSON.stringify(order));
+
+      // call the order-service using fetch
+      fetch(`/order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(order)
+      })
+        .then(response => {
+          console.log(response)
+          if (!response.ok) {
+            alert('Error occurred while submitting order')
+          } else {
+            this.cartItems = []
+            alert('Order submitted successfully')
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          alert('Error occurred while submitting order')
+        })
+    }
+  },
+}
 </script>
 
 <style>
-/* Light gray background for modern UI */
 body {
-  background-color: #f7f7f7;
+  background-image: url('@/assets/bby-logo.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* Keeps the background in place when scrolling */
   margin: 0;
   padding: 0;
 }
 
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 100px;
-  padding-bottom: 50px;
+  margin-top: 120px;
 }
 
-/* HEADER */
-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background-color: #004694; /* Best Buy Blue */
-  padding: 0 20px;
-  z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1200px;
-  margin: auto;
-}
-
-.logo-title {
-  display: flex;
-  align-items: center;
-}
-
-.logo {
-  height: 40px;
-  margin-right: 15px;
-}
-
-.title {
-  color: #fff;
-  font-size: 1.5rem;
-  margin: 0;
-}
-
-nav ul {
-  display: flex;
-  list-style: none;
-}
-
-nav li {
-  margin-left: 20px;
-}
-
-nav a {
-  color: white;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-nav a:hover {
-  color: #FFC600;
-}
-
-/* FOOTER */
 footer {
   position: fixed;
   bottom: 0;
-  width: 100%;
-  background-color: #004694;
-  color: white;
-  padding: 0.5rem;
+  left: 0;
+  right: 0;
+  background-color: #0a5620;
+  color: #fff;
+  padding: 1rem;
+  margin: 0;
 }
 
-/* PRODUCT GRID */
-.product-grid {
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  margin: 0 1rem;
+}
+
+a {
+  color: #fff;
+  text-decoration: none;
+}
+
+button {
+  padding: 10px;
+  background-color: #005f8b;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  height: 42px;
+}
+
+.product-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 25px;
-  padding: 40px;
-  max-width: 1200px;
-  margin: auto;
-  margin-bottom: 100px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 .product-card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
-.product-image {
-  width: 100%;
-  height: 180px;
-  object-fit: contain;
+.product-card img {
+  max-width: 100%;
+  margin-bottom: 1rem;
 }
 
-.price {
-  font-size: 1.2rem;
+.product-card a {
+  text-decoration: none;
+  color: #333;
+}
+
+.product-card h2 {
   font-weight: bold;
-  color: #004694;
+  margin-bottom: 0.5rem;
 }
 
-/* Buttons (Best Buy Yellow) */
-button {
+.product-card p {
+  margin-bottom: 1rem;
+}
+
+.product-controls {
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.product-controls p {
+  margin-right: 20px;
+}
+
+.product-controls button:hover {
+  background-color: #005f8b;
+}
+
+.product-price {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.quantity-input {
+  width: 50px;
+  height: 30px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+  margin-right: 10px;
+}
+
+.shopping-cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.shopping-cart h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.shopping-cart-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shopping-cart-table th,
+.shopping-cart-table td {
   padding: 10px;
-  background-color: #FFC600;
-  color: #000;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.shopping-cart-table th {
+  font-weight: bold;
+}
+
+.shopping-cart-table td img {
+  display: block;
+  margin: 0 auto;
+}
+
+.checkout-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007acc;
+  color: #fff;
   border: none;
   border-radius: 5px;
-  font-weight: bold;
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #002D59;
-  color: white;
+.checkout-button:hover {
+  background-color: #005f8b;
 }
 </style>

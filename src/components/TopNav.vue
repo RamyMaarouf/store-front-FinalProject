@@ -5,26 +5,22 @@
         <img src="/bestbuy-logo.png" alt="Best Buy Logo"> 
       </a>
     </div>
-    ```
+    </nav>
+</template>
 
-### 2. Style Changes (Color Scheme)
+<script>
+export default {
+  name: 'TopNav',
+  // You can define props, data, or methods here if necessary
+}
+</script>
 
-The navigation bar's background color is currently a shade of green/dark brown (`#3c673cd7`). We should change this to **Best Buy Blue** (`#004694`) for a professional look.
-
-| Section | Original Code | Action |
-| :--- | :--- | :--- |
-| `<style scoped>` | `background-color: #3c673cd7;` | **Change to Best Buy Blue** (`#004694`). |
-| `<style scoped>` | `@media (max-width: 768px) { ... background-color: #333; ... }` | Change the mobile dropdown background to Best Buy Blue or a lighter shade for contrast, such as a slightly lighter blue or even black/white. |
-
-#### Modified Style Snippet:
-
-```css
 <style scoped>
 nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* UPDATED TO BEST BUY BLUE */
+  /* FIXED: Best Buy Blue background */
   background-color: #004694; 
   color: #fff;
   padding-top: 0.5rem;
@@ -35,24 +31,24 @@ nav {
   top: 0;
   left: 0;
   right: 0;
+  z-index: 1000;
 }
-/* ... other styles ... */
 
-@media (max-width: 768px) {
-  .nav-links {
-    /* ... */
-  }
+.logo img {
+    height: 40px; /* Adjust height as necessary for your logo */
+    vertical-align: middle;
+}
 
-  .nav-links--open {
-    display: block;
-  }
+/* If you need styles for links, dropdowns, etc., add them here */
 
-  .nav-links--open li {
-    padding: 0.5rem 0;
-  }
-  
-  .hamburger {
-    display: block;
-  }
+/* Example link style */
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav a:hover {
+    color: #FFC600; /* Best Buy Yellow */
 }
 </style>
